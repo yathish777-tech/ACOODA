@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ACOODA — Adhiyamaan College Online On-Duty Application System
 
 > Digital OD Approval System for Adhiyamaan College of Engineering, Hosur
@@ -227,3 +228,7 @@ Industrial Visit, Other
 ---
 
 *Built for Adhiyamaan College of Engineering, Hosur — Achieve Create Excel*
+=======
+# ACOODA
+Adhiyamaan College Online On Duty Application
+>>>>>>> 021276653ab42a20c1f4278a5181ce165cabd44a
