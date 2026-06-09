@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% set current_user_initial = current_user.name[0].upper() %}
+{% set current_user_name = current_user.name %}
+{% set current_user_role = "Student" %}
+
+{% block title %}Student Dashboard - ACOODA{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('student.dashboard') }}" class="nav-item {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+  <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+</a>
+<a href="{{ url_for('student.apply') }}" class="nav-item">
+  <i class="fas fa-plus-circle"></i><span>Apply for OD</span>
+</a>
+<a href="{{ url_for('student.my_applications') }}" class="nav-item">
+  <i class="fas fa-list-alt"></i><span>My Applications</span>
+</a>
+<a href="{{ url_for('auth.change_password') }}" class="nav-item">
+  <i class="fas fa-key"></i><span>Change Password</span>
+</a>
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('student.apply') }}" class="btn-topbar">
+  <i class="fas fa-plus"></i> New Application
+</a>
+{% if notifications %}
+<div class="notif-badge" title="{{ notifications|length }} new notifications">
+  <i class="fas fa-bell"></i>
+  <span class="badge-count">{{ notifications|length }}</span>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+  <div class="welcome-text">
+    <h2>Welcome back, {{ current_user.name.split()[0] }}! 👋</h2>
+    <p>{{ current_user.department }} | Year {{ current_user.year }} | Section {{ current_user.section }} | {{ current_user.register_no }}</p>
+  </div>
+  <a href="{{ url_for('student.apply') }}" class="btn-primary">
+    <i class="fas fa-plus-circle"></i> Apply for OD
+  </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card stat-total">
+    <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ stats.total }}</div>
+      <div class="stat-label">Total Applications</div>
+    </div>
+  </div>
+  <div class="stat-card stat-pending">
+    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ stats.pending }}</div>
+      <div class="stat-label">Pending</div>
+    </div>
+  </div>
+  <div class="stat-card stat-approved">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ stats.approved }}</div>
+      <div class="stat-label">Approved</div>
+    </div>
+  </div>
+  <div class="stat-card stat-rejected">
+    <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ stats.rejected }}</div>
+      <div class="stat-label">Rejected</div>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications -->
+{% if notifications %}
+<div class="card mb-4">
+  <div class="card-header">
+    <h3><i class="fas fa-bell text-warning"></i> Recent Notifications</h3>
+    <form method="POST" action="{{ url_for('student.mark_notifications_read') }}" style="display:inline">
+      <button type="submit" class="btn-sm-outline">Mark all read</button>
+    </form>
+  </div>
+  <div class="notif-list">
+    {% for notif in notifications %}
+    <div class="notif-item">
+      <i class="fas fa-info-circle text-info"></i>
+      <span>{{ notif.message }}</span>
+      <small class="notif-time">{{ notif.created_at.strftime('%d %b, %H:%M') }}</small>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Recent Applications -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-history"></i> Recent Applications</h3>
+    <a href="{{ url_for('student.my_applications') }}" class="btn-sm-outline">View All</a>
+  </div>
+  {% if apps %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Application ID</th>
+          <th>Tutor Name</th>
+          <th>Event Name</th>
+          <th>Reason</th>
+          <th>From Date</th>
+          <th>To Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in apps[:8] %}
+        <tr>
+          <td><span class="app-id">{{ app.application_id }}</span></td>
+          <td>
+            <strong>{{ app.tutor.tutor_name if app.tutor else app.tutor_name or 'Not assigned' }}</strong>
+            {% if app.tutor %}<br><small class="text-muted">{{ app.tutor.email }}</small>{% endif %}
+          </td>
+          <td>{{ app.event_name }}</td>
+          <td><span class="badge badge-info">{{ app.reason }}</span></td>
+          <td>{{ app.from_date.strftime('%d %b %Y') }}</td>
+          <td>{{ app.to_date.strftime('%d %b %Y') }}</td>
+          <td><span class="status-badge status-{{ app.status | lower | replace(' ', '-') }}">{{ app.status }}</span></td>
+          <td>
+            <div class="action-btns">
+              <a href="{{ url_for('student.view_application', app_id=app.id) }}" class="btn-icon btn-view" title="View">
+                <i class="fas fa-eye"></i>
+              </a>
+              {% if app.status == 'HOD Approved' %}
+              <a href="{{ url_for('student.download_pdf', app_id=app.id) }}" class="btn-icon btn-download" title="Download PDF">
+                <i class="fas fa-file-pdf"></i>
+              </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-file-alt"></i>
+    <h4>No Applications Yet</h4>
+    <p>Start by applying for your first OD</p>
+    <a href="{{ url_for('student.apply') }}" class="btn-primary mt-2">Apply for OD</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% set current_user_initial = "A" %}
+{% set current_user_name = current_user.username %}
+{% set current_user_role = "Administrator" %}
+{% block title %}Upload Tutors - Admin{% endblock %}
+{% block page_title %}Upload Tutor Data{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+<a href="{{ url_for('admin.tutors') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Tutors</span></a>
+<a href="{{ url_for('admin.hods') }}" class="nav-item"><i class="fas fa-user-tie"></i><span>HODs</span></a>
+<a href="{{ url_for('admin.upload_tutors') }}" class="nav-item active"><i class="fas fa-upload"></i><span>Upload Tutors</span></a>
+<a href="{{ url_for('admin.upload_hods') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload HODs</span></a>
+<a href="{{ url_for('admin.applications') }}" class="nav-item"><i class="fas fa-file-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('admin.audit_log') }}" class="nav-item"><i class="fas fa-history"></i><span>Audit Log</span></a>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}{% endif %}{% endwith %}
+<div class="upload-grid">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-upload"></i> Upload Tutor Excel</h3></div>
+    <div style="padding:1.5rem">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Excel Format Required:</strong>
+          <ul style="margin:0.5rem 0 0 1.5rem">
+            <li>Tutor Name</li>
+            <li>Tutor Email</li>
+            <li>Department</li>
+            <li>Year Handling (1-4)</li>
+            <li>Section Handling (A, B, C...)</li>
+          </ul>
+          <p style="margin-top:0.5rem">Default password: <code>staff123</code> (must change on first login)</p>
+        </div>
+      </div>
+      <form method="POST" action="{{ url_for('admin.upload_tutors') }}" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Select Excel File (.xlsx or .xls)</label>
+          <div class="file-upload-area">
+            <input type="file" name="excel_file" id="excelFile" accept=".xlsx,.xls" required style="display:none">
+            <div class="file-upload-placeholder" onclick="document.getElementById('excelFile').click()">
+              <i class="fas fa-file-excel" style="color:#16a34a;font-size:2rem"></i>
+              <p>Click to select Excel file</p>
+              <small>.xlsx or .xls files only</small>
+            </div>
+            <div class="file-selected" id="fileSelected" style="display:none">
+              <i class="fas fa-file-excel" style="color:#16a34a"></i>
+              <span id="fileName"></span>
+              <button type="button" onclick="clearFile()"><i class="fas fa-times"></i></button>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary"><i class="fas fa-upload"></i> Upload & Process</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-download"></i> Download Template</h3></div>
+    <div style="padding:1.5rem">
+      <p>Download the sample Excel template with the correct column headers.</p>
+      <a href="{{ url_for('admin.download_tutor_template') }}" class="btn-primary">
+        <i class="fas fa-file-excel"></i> Download Tutor Template
+      </a>
+      <div class="template-preview mt-4">
+        <h4>Sample Format:</h4>
+        <div class="table-responsive">
+          <table class="data-table" style="font-size:0.8rem">
+            <thead><tr><th>Tutor Name</th><th>Tutor Email</th><th>Department</th><th>Year Handling</th><th>Section Handling</th></tr></thead>
+            <tbody>
+              <tr><td>Dr. Sample</td><td>tutor@ace.edu</td><td>Computer Science</td><td>2</td><td>A</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const fileInput = document.getElementById('excelFile');
+fileInput.addEventListener('change', function() {
+  if (this.files.length) {
+    document.getElementById('fileName').textContent = this.files[0].name;
+    document.getElementById('fileSelected').style.display = 'flex';
+    document.querySelector('.file-upload-placeholder').style.display = 'none';
+  }
+});
+function clearFile() {
+  fileInput.value = '';
+  document.getElementById('fileSelected').style.display = 'none';
+  document.querySelector('.file-upload-placeholder').style.display = 'flex';
+}
+</script>
+{% endblock %}

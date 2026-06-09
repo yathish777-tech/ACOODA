@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% set current_user_initial = "A" %}
+{% set current_user_name = current_user.username %}
+{% set current_user_role = "Administrator" %}
+{% block title %}Upload HODs - Admin{% endblock %}
+{% block page_title %}Upload HOD Data{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+<a href="{{ url_for('admin.tutors') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Tutors</span></a>
+<a href="{{ url_for('admin.hods') }}" class="nav-item"><i class="fas fa-user-tie"></i><span>HODs</span></a>
+<a href="{{ url_for('admin.upload_tutors') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload Tutors</span></a>
+<a href="{{ url_for('admin.upload_hods') }}" class="nav-item active"><i class="fas fa-upload"></i><span>Upload HODs</span></a>
+<a href="{{ url_for('admin.applications') }}" class="nav-item"><i class="fas fa-file-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('admin.audit_log') }}" class="nav-item"><i class="fas fa-history"></i><span>Audit Log</span></a>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}{% endif %}{% endwith %}
+<div class="upload-grid">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-upload"></i> Upload HOD Excel</h3></div>
+    <div style="padding:1.5rem">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Excel Format:</strong>
+          <ul style="margin:0.5rem 0 0 1.5rem">
+            <li>HOD Name</li>
+            <li>HOD Email</li>
+            <li>Department</li>
+          </ul>
+          <p style="margin-top:0.5rem">Default password: <code>hod123</code></p>
+        </div>
+      </div>
+      <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Select Excel File</label>
+          <div class="file-upload-area">
+            <input type="file" name="excel_file" id="excelFile" accept=".xlsx,.xls" required style="display:none">
+            <div class="file-upload-placeholder" onclick="document.getElementById('excelFile').click()">
+              <i class="fas fa-file-excel" style="color:#16a34a;font-size:2rem"></i>
+              <p>Click to select Excel file</p>
+            </div>
+            <div class="file-selected" id="fileSelected" style="display:none">
+              <i class="fas fa-file-excel" style="color:#16a34a"></i>
+              <span id="fileName"></span>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary"><i class="fas fa-upload"></i> Upload & Process</button>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-download"></i> Download Template</h3></div>
+    <div style="padding:1.5rem">
+      <a href="{{ url_for('admin.download_hod_template') }}" class="btn-primary">
+        <i class="fas fa-file-excel"></i> Download HOD Template
+      </a>
+      <div class="template-preview mt-4">
+        <h4>Sample Format:</h4>
+        <table class="data-table" style="font-size:0.8rem">
+          <thead><tr><th>HOD Name</th><th>HOD Email</th><th>Department</th></tr></thead>
+          <tbody><tr><td>Dr. Sample HOD</td><td>hod@ace.edu</td><td>Computer Science</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('excelFile').addEventListener('change', function() {
+  if (this.files.length) {
+    document.getElementById('fileName').textContent = this.files[0].name;
+    document.getElementById('fileSelected').style.display = 'flex';
+    document.querySelector('.file-upload-placeholder').style.display = 'none';
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% set current_user_initial = current_user.name[0].upper() %}
+{% set current_user_name = current_user.name %}
+{% set current_user_role = "Student" %}
+
+{% block title %}Apply for OD - ACOODA{% endblock %}
+{% block page_title %}Apply for On-Duty{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('student.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('student.apply') }}" class="nav-item active"><i class="fas fa-plus-circle"></i><span>Apply for OD</span></a>
+<a href="{{ url_for('student.my_applications') }}" class="nav-item"><i class="fas fa-list-alt"></i><span>My Applications</span></a>
+<a href="{{ url_for('auth.change_password') }}" class="nav-item"><i class="fas fa-key"></i><span>Change Password</span></a>
+{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}{% for category, message in messages %}
+    <div class="alert alert-{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</div>
+  {% endfor %}{% endif %}
+{% endwith %}
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-plus-circle text-primary"></i> New OD Application</h3>
+  </div>
+  <form method="POST" action="{{ url_for('student.apply') }}" enctype="multipart/form-data" class="od-form">
+    
+    <!-- Auto-filled Student Info -->
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-user-graduate"></i> Student Information (Auto-filled)</h4>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Register Number</label>
+          <input type="text" class="form-control" value="{{ current_user.register_no }}" readonly>
+        </div>
+        <div class="form-group">
+          <label>Student Name</label>
+          <input type="text" class="form-control" value="{{ current_user.name }}" readonly>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Department</label>
+          <input type="text" class="form-control" value="{{ current_user.department }}" readonly>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <input type="text" class="form-control" value="{{ current_user.year }} Year" readonly>
+        </div>
+        <div class="form-group">
+          <label>Section</label>
+          <input type="text" class="form-control" value="Section {{ current_user.section }}" readonly>
+        </div>
+      </div>
+      {% if tutor %}
+      <div class="form-row-3 tutor-assignment-row">
+        <div class="form-group">
+          <label>Tutor Name</label>
+          <input type="text" class="form-control" value="{{ tutor.tutor_name }}" readonly>
+        </div>
+        <div class="form-group">
+          <label>Tutor Email</label>
+          <input type="email" class="form-control" value="{{ tutor.email }}" readonly>
+        </div>
+        <div class="form-group">
+          <label>Section Handling</label>
+          <input type="text" class="form-control" value="Year {{ tutor.year_handling }} - Section {{ tutor.section_handling }}" readonly>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> No tutor assigned for your Year/Section. Contact admin.</div>
+      {% endif %}
+    </div>
+
+    <!-- Event Details -->
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-calendar-alt"></i> Event Details</h4>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Event Name <span class="required">*</span></label>
+          <input type="text" name="event_name" class="form-control" placeholder="e.g. National Level Hackathon" required>
+        </div>
+        <div class="form-group">
+          <label>Reason Category <span class="required">*</span></label>
+          <select name="reason" class="form-control" required>
+            <option value="">Select Category</option>
+            <option>Symposium</option>
+            <option>Workshop</option>
+            <option>Internship</option>
+            <option>Placement Training</option>
+            <option>Hackathon</option>
+            <option>Project Presentation</option>
+            <option>Technical Event</option>
+            <option>Sports Event</option>
+            <option>NSS/NCC Activity</option>
+            <option>Industrial Visit</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Event Date <span class="required">*</span></label>
+          <input type="date" name="event_date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>From Date <span class="required">*</span></label>
+          <input type="date" name="from_date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>To Date <span class="required">*</span></label>
+          <input type="date" name="to_date" class="form-control" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Detailed Description <span class="required">*</span></label>
+        <textarea name="description" class="form-control" rows="4" placeholder="Describe the event, purpose, and why OD is required..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Supporting Document <span class="optional">(Optional)</span></label>
+        <div class="file-upload-area" id="fileUploadArea">
+          <input type="file" name="document" id="documentFile" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" style="display:none">
+          <div class="file-upload-placeholder" onclick="document.getElementById('documentFile').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Click to upload or drag & drop</p>
+            <small>PDF, Images, Word docs (max 5MB)</small>
+          </div>
+          <div class="file-selected" id="fileSelected" style="display:none">
+            <i class="fas fa-file-check"></i>
+            <span id="fileName"></span>
+            <button type="button" onclick="clearFile()"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a href="{{ url_for('student.dashboard') }}" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Cancel
+      </a>
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-paper-plane"></i> Submit Application
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+const fileInput = document.getElementById('documentFile');
+const fileSelected = document.getElementById('fileSelected');
+const fileName = document.getElementById('fileName');
+const placeholder = document.querySelector('.file-upload-placeholder');
+
+fileInput.addEventListener('change', function() {
+  if (this.files.length > 0) {
+    fileName.textContent = this.files[0].name;
+    fileSelected.style.display = 'flex';
+    placeholder.style.display = 'none';
+  }
+});
+
+function clearFile() {
+  fileInput.value = '';
+  fileSelected.style.display = 'none';
+  placeholder.style.display = 'flex';
+}
+
+// Date validation
+document.querySelector('form').addEventListener('submit', function(e) {
+  const from = document.querySelector('[name="from_date"]').value;
+  const to = document.querySelector('[name="to_date"]').value;
+  if (from && to && from > to) {
+    e.preventDefault();
+    alert('To Date must be after From Date');
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% set current_user_initial = current_user.hod_name[0].upper() %}
+{% set current_user_name = current_user.hod_name %}
+{% set current_user_role = "HOD" %}
+{% block title %}Reports - HOD ACOODA{% endblock %}
+{% block page_title %}Department Reports{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('hod.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('hod.applications') }}" class="nav-item"><i class="fas fa-list-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('hod.reports') }}" class="nav-item active"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+<a href="{{ url_for('hod.export_excel') }}" class="nav-item"><i class="fas fa-file-excel"></i><span>Export Excel</span></a>
+<a href="{{ url_for('auth.change_password') }}" class="nav-item"><i class="fas fa-key"></i><span>Change Password</span></a>
+{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('hod.export_excel') }}" class="btn-topbar"><i class="fas fa-file-excel"></i> Export Excel</a>
+{% endblock %}
+{% block content %}
+<div class="card mb-4">
+  <div class="card-header"><h3><i class="fas fa-filter"></i> Filter Reports</h3></div>
+  <form method="GET" class="filter-form">
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Year</label>
+        <select name="year" class="form-control">
+          <option value="">All Years</option>
+          {% for y in range(2022, 2027) %}
+          <option value="{{ y }}" {% if year_filter == y|string %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Month</label>
+        <select name="month" class="form-control">
+          <option value="">All Months</option>
+          {% for m, name in [(1,'January'),(2,'February'),(3,'March'),(4,'April'),(5,'May'),(6,'June'),(7,'July'),(8,'August'),(9,'September'),(10,'October'),(11,'November'),(12,'December')] %}
+          <option value="{{ m }}" {% if month_filter == m|string %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn-primary"><i class="fas fa-search"></i> Generate Report</button>
+    {% if year_filter or month_filter %}<a href="{{ url_for('hod.reports') }}" class="btn-secondary ml-2">Clear</a>{% endif %}
+  </form>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid mb-4">
+  <div class="stat-card stat-total"><div class="stat-icon"><i class="fas fa-file-alt"></i></div><div class="stat-info"><div class="stat-value">{{ apps|length }}</div><div class="stat-label">Total (Filtered)</div></div></div>
+  <div class="stat-card stat-approved"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-info"><div class="stat-value">{{ apps|selectattr('status','eq','HOD Approved')|list|length }}</div><div class="stat-label">Approved</div></div></div>
+  <div class="stat-card stat-rejected"><div class="stat-icon"><i class="fas fa-times-circle"></i></div><div class="stat-info"><div class="stat-value">{{ apps|selectattr('status','equalto','HOD Rejected')|list|length }}</div><div class="stat-label">Rejected</div></div></div>
+  <div class="stat-card stat-pending"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><div class="stat-value">{{ apps|selectattr('status','eq','Pending HOD Review')|list|length }}</div><div class="stat-label">Pending</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-table"></i> Application Records</h3></div>
+  {% if apps %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>App ID</th><th>Student</th><th>Yr/Sec</th><th>Event</th><th>Reason</th><th>OD Period</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for app in apps %}
+        <tr>
+          <td><span class="app-id">{{ app.application_id }}</span></td>
+          <td><strong>{{ app.student.name }}</strong><br><small>{{ app.student.register_no }}</small></td>
+          <td>{{ app.student.year }}{{ app.student.section }}</td>
+          <td>{{ app.event_name }}</td>
+          <td><span class="badge badge-info">{{ app.reason }}</span></td>
+          <td>{{ app.from_date.strftime('%d %b') }}–{{ app.to_date.strftime('%d %b %Y') }}</td>
+          <td><span class="status-badge status-{{ app.status | lower | replace(' ', '-') }}">{{ app.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-chart-bar"></i><h4>No Data</h4><p>No applications match the selected filters</p></div>
+  {% endif %}
+</div>
+{% endblock %}

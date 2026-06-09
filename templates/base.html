@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}ACOODA - ACE On-Duty Portal{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+{% block full_page %}
+<div class="app-wrapper">
+  <!-- Sidebar -->
+  {% block sidebar %}
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="{{ url_for('static', filename='images/college_logo.png') }}" alt="ACE Logo" class="sidebar-logo">
+      <div class="sidebar-brand">
+        <span class="brand-name">ACOODA</span>
+        <span class="brand-sub">ACE On-Duty Portal</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      {% block nav_links %}{% endblock %}
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">{{ current_user_initial }}</div>
+        <div class="user-details">
+          <span class="user-name">{{ current_user_name }}</span>
+          <span class="user-role">{{ current_user_role }}</span>
+        </div>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+    </div>
+  </aside>
+  {% endblock %}
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+      <div class="topbar-actions">
+        {% block topbar_actions %}{% endblock %}
+      </div>
+    </div>
+
+    <div class="content-area">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+              {{ message }}
+              <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

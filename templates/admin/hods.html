@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% set current_user_initial = "A" %}
+{% set current_user_name = current_user.username %}
+{% set current_user_role = "Administrator" %}
+{% block title %}HODs - Admin ACOODA{% endblock %}
+{% block page_title %}HOD Management{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+<a href="{{ url_for('admin.tutors') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Tutors</span></a>
+<a href="{{ url_for('admin.hods') }}" class="nav-item active"><i class="fas fa-user-tie"></i><span>HODs</span></a>
+<a href="{{ url_for('admin.upload_tutors') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload Tutors</span></a>
+<a href="{{ url_for('admin.upload_hods') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload HODs</span></a>
+<a href="{{ url_for('admin.applications') }}" class="nav-item"><i class="fas fa-file-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('admin.audit_log') }}" class="nav-item"><i class="fas fa-history"></i><span>Audit Log</span></a>
+{% endblock %}
+{% block topbar_actions %}
+<button type="button" class="btn-topbar" onclick="openModal('addHodModal')"><i class="fas fa-plus"></i> Add HOD</button>
+<a href="{{ url_for('admin.upload_hods') }}" class="btn-topbar"><i class="fas fa-upload"></i> Upload HODs</a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-filter"></i> Search & Filters</h3>
+    <a href="{{ url_for('admin.hods') }}" class="btn-sm-outline">Clear</a>
+  </div>
+  <form method="GET" action="{{ url_for('admin.hods') }}" class="management-toolbar management-toolbar-compact">
+    <div class="form-group">
+      <label>Name, Department, or Email</label>
+      <input type="search" name="q" class="form-control" value="{{ filters.q }}" placeholder="Search HODs">
+    </div>
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department" class="form-control">
+        <option value="">All Departments</option>
+        {% for department in filter_options.departments %}
+        <option value="{{ department }}" {% if filters.department == department %}selected{% endif %}>{{ department }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-primary toolbar-submit"><i class="fas fa-search"></i> Search</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-user-tie"></i> All HODs ({{ hods|length }})</h3>
+    <button type="button" class="btn-sm-outline" onclick="openModal('addHodModal')"><i class="fas fa-plus"></i> Add HOD</button>
+  </div>
+  {% if hods %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Department</th><th>Status</th><th>Added</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for h in hods %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ h.hod_name }}</strong></td>
+          <td>{{ h.email }}</td>
+          <td>{{ h.department }}</td>
+          <td><span class="badge {% if h.is_active %}badge-success{% else %}badge-danger{% endif %}">{{ 'Active' if h.is_active else 'Inactive' }}</span></td>
+          <td>{{ h.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div class="action-btns">
+              <button type="button" class="btn-icon btn-view" title="View" onclick="openModal('viewHod{{ h.id }}')"><i class="fas fa-eye"></i></button>
+              <button type="button" class="btn-icon btn-edit" title="Edit" onclick="openModal('editHod{{ h.id }}')"><i class="fas fa-pen"></i></button>
+              <form method="POST" action="{{ url_for('admin.delete_hod', hid=h.id) }}">
+                <button type="submit" class="btn-icon btn-delete" title="Delete" data-confirm="Delete {{ h.hod_name }}? Assigned applications will keep history but become unassigned."><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-user-tie"></i>
+    <h4>No HODs Found</h4>
+    <p>Add a HOD or adjust your filters.</p>
+    <button type="button" class="btn-primary mt-2" onclick="openModal('addHodModal')">Add HOD</button>
+  </div>
+  {% endif %}
+</div>
+
+<div class="modal-backdrop" id="addHodModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-plus"></i> Add HOD</h3>
+      <button type="button" class="modal-close" onclick="closeModal('addHodModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.add_hod') }}" class="modal-body">
+      <div class="form-row-2">
+        <div class="form-group"><label>HOD Name</label><input type="text" name="hod_name" class="form-control" required></div>
+        <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" required></div>
+      </div>
+      <div class="form-group"><label>Department</label><input type="text" name="department" class="form-control" required></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeModal('addHodModal')">Cancel</button>
+        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save HOD</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% for h in hods %}
+<div class="modal-backdrop" id="viewHod{{ h.id }}">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-user-tie"></i> HOD Details</h3>
+      <button type="button" class="modal-close" onclick="closeModal('viewHod{{ h.id }}')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Name</span><span class="detail-value">{{ h.hod_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value">{{ h.email }}</span></div>
+        <div class="detail-item"><span class="detail-label">Department</span><span class="detail-value">{{ h.department }}</span></div>
+        <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value">{{ 'Active' if h.is_active else 'Inactive' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Added</span><span class="detail-value">{{ h.created_at.strftime('%d %b %Y') }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="editHod{{ h.id }}">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-pen"></i> Edit HOD</h3>
+      <button type="button" class="modal-close" onclick="closeModal('editHod{{ h.id }}')"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.edit_hod', hid=h.id) }}" class="modal-body">
+      <div class="form-row-2">
+        <div class="form-group"><label>HOD Name</label><input type="text" name="hod_name" class="form-control" value="{{ h.hod_name }}" required></div>
+        <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" value="{{ h.email }}" required></div>
+      </div>
+      <div class="form-group"><label>Department</label><input type="text" name="department" class="form-control" value="{{ h.department }}" required></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeModal('editHod{{ h.id }}')">Cancel</button>
+        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Update HOD</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-backdrop').forEach(modal => {
+  modal.addEventListener('click', event => {
+    if (event.target === modal) modal.classList.remove('open');
+  });
+});
+</script>
+{% endblock %}

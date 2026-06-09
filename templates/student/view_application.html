@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% set current_user_initial = current_user.name[0].upper() %}
+{% set current_user_name = current_user.name %}
+{% set current_user_role = "Student" %}
+
+{% block title %}Application {{ application.application_id }} - ACOODA{% endblock %}
+{% block page_title %}Application Details{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('student.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('student.apply') }}" class="nav-item"><i class="fas fa-plus-circle"></i><span>Apply for OD</span></a>
+<a href="{{ url_for('student.my_applications') }}" class="nav-item active"><i class="fas fa-list-alt"></i><span>My Applications</span></a>
+<a href="{{ url_for('auth.change_password') }}" class="nav-item"><i class="fas fa-key"></i><span>Change Password</span></a>
+{% endblock %}
+
+{% block topbar_actions %}
+{% if application.status == 'HOD Approved' %}
+<a href="{{ url_for('student.download_pdf', app_id=application.id) }}" class="btn-topbar">
+  <i class="fas fa-download"></i> Download OD PDF
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="view-app-grid">
+  <!-- Application Details -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-file-alt"></i> {{ application.application_id }}</h3>
+      <span class="status-badge status-{{ application.status | lower | replace(' ', '-') }}">{{ application.status }}</span>
+    </div>
+
+    <div class="detail-section">
+      <h4 class="detail-section-title">Student Information</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Register No.</span><span class="detail-value">{{ current_user.register_no }}</span></div>
+        <div class="detail-item"><span class="detail-label">Name</span><span class="detail-value">{{ current_user.name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Department</span><span class="detail-value">{{ current_user.department }}</span></div>
+        <div class="detail-item"><span class="detail-label">Year & Section</span><span class="detail-value">{{ current_user.year }} Year - Section {{ current_user.section }}</span></div>
+        <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value">{{ current_user.email }}</span></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4 class="detail-section-title">Tutor Information</h4>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Tutor Name</span>
+          <span class="detail-value">{{ application.tutor.tutor_name if application.tutor else application.tutor_name or 'Not assigned' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Tutor Email</span>
+          <span class="detail-value">{{ application.tutor.email if application.tutor else 'Not available' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Section Handling</span>
+          <span class="detail-value">
+            {% if application.tutor %}
+              Year {{ application.tutor.year_handling }} - Section {{ application.tutor.section_handling }}
+            {% else %}
+              Not assigned
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4 class="detail-section-title">Event Details</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Event Name</span><span class="detail-value">{{ application.event_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Category</span><span class="detail-value"><span class="badge badge-info">{{ application.reason }}</span></span></div>
+        <div class="detail-item"><span class="detail-label">Event Date</span><span class="detail-value">{{ application.event_date.strftime('%d %B %Y') }}</span></div>
+        <div class="detail-item"><span class="detail-label">From Date</span><span class="detail-value">{{ application.from_date.strftime('%d %B %Y') }}</span></div>
+        <div class="detail-item"><span class="detail-label">To Date</span><span class="detail-value">{{ application.to_date.strftime('%d %B %Y') }}</span></div>
+        <div class="detail-item"><span class="detail-label">Submitted On</span><span class="detail-value">{{ application.created_at.strftime('%d %B %Y, %H:%M') }}</span></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4 class="detail-section-title">Description</h4>
+      <div class="description-box">{{ application.description }}</div>
+    </div>
+
+    {% if application.tutor_remark %}
+    <div class="detail-section">
+      <h4 class="detail-section-title">Tutor Remark</h4>
+      <div class="remark-box remark-tutor">
+        <i class="fas fa-comment-dots"></i> {{ application.tutor_remark }}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if application.hod_remark %}
+    <div class="detail-section">
+      <h4 class="detail-section-title">HOD Remark</h4>
+      <div class="remark-box remark-hod">
+        <i class="fas fa-comment-dots"></i> {{ application.hod_remark }}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if application.status == 'HOD Approved' %}
+    <div class="approved-banner">
+      <i class="fas fa-check-circle"></i>
+      <div>
+        <strong>Application Fully Approved!</strong>
+        <p>Your OD letter is ready for download</p>
+      </div>
+      <a href="{{ url_for('student.download_pdf', app_id=application.id) }}" class="btn-primary">
+        <i class="fas fa-file-pdf"></i> Download OD Letter
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Timeline -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-stream"></i> Approval Timeline</h3>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item completed">
+        <div class="timeline-icon"><i class="fas fa-paper-plane"></i></div>
+        <div class="timeline-content">
+          <h5>Application Submitted</h5>
+          <p>{{ application.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+        </div>
+      </div>
+
+      <div class="timeline-item {% if application.status not in ['Pending Tutor Review'] %}completed{% endif %} {% if application.status == 'Tutor Rejected' %}rejected{% endif %}">
+        <div class="timeline-icon">
+          {% if application.status == 'Tutor Rejected' %}<i class="fas fa-times"></i>
+          {% elif application.status != 'Pending Tutor Review' %}<i class="fas fa-check"></i>
+          {% else %}<i class="fas fa-clock"></i>{% endif %}
+        </div>
+        <div class="timeline-content">
+          <h5>Tutor Review</h5>
+          {% if application.tutor_reviewed_at %}
+            <p>{{ application.tutor_reviewed_at.strftime('%d %b %Y, %H:%M') }}</p>
+          {% elif application.status == 'Pending Tutor Review' %}
+            <p class="text-muted">Awaiting tutor review</p>
+          {% endif %}
+          {% if application.tutor %}
+            <small class="text-muted">{{ application.tutor.tutor_name }}</small>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="timeline-item {% if application.status in ['HOD Approved', 'HOD Rejected'] %}completed{% endif %} {% if application.status == 'HOD Rejected' %}rejected{% endif %}">
+        <div class="timeline-icon">
+          {% if application.status == 'HOD Rejected' %}<i class="fas fa-times"></i>
+          {% elif application.status == 'HOD Approved' %}<i class="fas fa-check"></i>
+          {% else %}<i class="fas fa-clock"></i>{% endif %}
+        </div>
+        <div class="timeline-content">
+          <h5>HOD Approval</h5>
+          {% if application.hod_reviewed_at %}
+            <p>{{ application.hod_reviewed_at.strftime('%d %b %Y, %H:%M') }}</p>
+          {% else %}
+            <p class="text-muted">Awaiting HOD review</p>
+          {% endif %}
+          {% if application.hod %}
+            <small class="text-muted">{{ application.hod.hod_name }}</small>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="timeline-item {% if application.status == 'HOD Approved' %}completed{% endif %}">
+        <div class="timeline-icon">
+          {% if application.status == 'HOD Approved' %}<i class="fas fa-file-pdf"></i>
+          {% else %}<i class="fas fa-clock"></i>{% endif %}
+        </div>
+        <div class="timeline-content">
+          <h5>OD Letter Ready</h5>
+          {% if application.status == 'HOD Approved' %}
+            <p class="text-success">Download available</p>
+          {% else %}
+            <p class="text-muted">Pending approval</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Logs -->
+    {% if logs %}
+    <div class="audit-section">
+      <h4 class="detail-section-title">Audit Log</h4>
+      {% for log in logs %}
+      <div class="audit-item">
+        <div class="audit-icon"><i class="fas fa-history"></i></div>
+        <div class="audit-content">
+          <strong>{{ log.action }}</strong>
+          <small>{{ log.performed_by }} ({{ log.role }}) — {{ log.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+          {% if log.remark %}<p>{{ log.remark }}</p>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="mt-4">
+  <a href="{{ url_for('student.my_applications') }}" class="btn-secondary">
+    <i class="fas fa-arrow-left"></i> Back to Applications
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% set current_user_initial = "A" %}
+{% set current_user_name = current_user.username %}
+{% set current_user_role = "Administrator" %}
+{% block title %}Audit Log - Admin{% endblock %}
+{% block page_title %}System Audit Log{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+<a href="{{ url_for('admin.tutors') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Tutors</span></a>
+<a href="{{ url_for('admin.hods') }}" class="nav-item"><i class="fas fa-user-tie"></i><span>HODs</span></a>
+<a href="{{ url_for('admin.upload_tutors') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload Tutors</span></a>
+<a href="{{ url_for('admin.upload_hods') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload HODs</span></a>
+<a href="{{ url_for('admin.applications') }}" class="nav-item"><i class="fas fa-file-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('admin.audit_log') }}" class="nav-item active"><i class="fas fa-history"></i><span>Audit Log</span></a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-history"></i> Audit Log (Latest 200)</h3></div>
+  {% if logs %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>App ID</th><th>Action</th><th>Performed By</th><th>Role</th><th>Remark</th><th>Date/Time</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td><span class="app-id">{{ log.application_id }}</span></td>
+          <td><strong>{{ log.action }}</strong></td>
+          <td>{{ log.performed_by }}</td>
+          <td><span class="badge badge-info">{{ log.role }}</span></td>
+          <td>{{ log.remark or '—' }}</td>
+          <td>{{ log.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-history"></i><h4>No Audit Logs Yet</h4></div>
+  {% endif %}
+</div>
+{% endblock %}

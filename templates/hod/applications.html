@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set current_user_initial = current_user.hod_name[0].upper() %}
+{% set current_user_name = current_user.hod_name %}
+{% set current_user_role = "HOD" %}
+{% block title %}Applications - HOD ACOODA{% endblock %}
+{% block page_title %}Department Applications{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('hod.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('hod.applications') }}" class="nav-item active"><i class="fas fa-list-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('hod.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+<a href="{{ url_for('hod.export_excel') }}" class="nav-item"><i class="fas fa-file-excel"></i><span>Export Excel</span></a>
+<a href="{{ url_for('auth.change_password') }}" class="nav-item"><i class="fas fa-key"></i><span>Change Password</span></a>
+{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('hod.export_excel') }}" class="btn-topbar"><i class="fas fa-file-excel"></i> Export</a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list-alt"></i> {{ current_user.department }} — All Applications</h3>
+    <div class="filter-group">
+      <a href="{{ url_for('hod.applications') }}" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+      <a href="{{ url_for('hod.applications', status='Pending HOD Review') }}" class="filter-btn {% if status_filter == 'Pending HOD Review' %}active{% endif %}">Pending</a>
+      <a href="{{ url_for('hod.applications', status='HOD Approved') }}" class="filter-btn {% if status_filter == 'HOD Approved' %}active{% endif %}">Approved</a>
+      <a href="{{ url_for('hod.applications', status='HOD Rejected') }}" class="filter-btn {% if status_filter == 'HOD Rejected' %}active{% endif %}">Rejected</a>
+    </div>
+  </div>
+  {% if apps %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>App ID</th><th>Student</th><th>Event</th><th>Reason</th><th>From</th><th>To</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for app in apps %}
+        <tr>
+          <td><span class="app-id">{{ app.application_id }}</span></td>
+          <td><strong>{{ app.student.name }}</strong><br><small class="text-muted">{{ app.student.register_no }} | Yr {{ app.student.year }}{{ app.student.section }}</small></td>
+          <td>{{ app.event_name }}</td>
+          <td><span class="badge badge-info">{{ app.reason }}</span></td>
+          <td>{{ app.from_date.strftime('%d %b %Y') }}</td>
+          <td>{{ app.to_date.strftime('%d %b %Y') }}</td>
+          <td><span class="status-badge status-{{ app.status | lower | replace(' ', '-') }}">{{ app.status }}</span></td>
+          <td><a href="{{ url_for('hod.review_application', app_id=app.id) }}" class="btn-icon btn-view"><i class="fas fa-{% if app.status == 'Pending HOD Review' %}clipboard-check{% else %}eye{% endif %}"></i></a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-folder-open"></i><h4>No Applications Found</h4></div>
+  {% endif %}
+</div>
+{% endblock %}

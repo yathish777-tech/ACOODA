@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set current_user_initial = "A" %}
+{% set current_user_name = current_user.username %}
+{% set current_user_role = "Administrator" %}
+{% block title %}All Applications - Admin{% endblock %}
+{% block page_title %}All Applications{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+<a href="{{ url_for('admin.tutors') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Tutors</span></a>
+<a href="{{ url_for('admin.hods') }}" class="nav-item"><i class="fas fa-user-tie"></i><span>HODs</span></a>
+<a href="{{ url_for('admin.upload_tutors') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload Tutors</span></a>
+<a href="{{ url_for('admin.upload_hods') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload HODs</span></a>
+<a href="{{ url_for('admin.applications') }}" class="nav-item active"><i class="fas fa-file-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('admin.audit_log') }}" class="nav-item"><i class="fas fa-history"></i><span>Audit Log</span></a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-file-alt"></i> System-wide Applications ({{ apps|length }})</h3></div>
+  {% if apps %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>App ID</th><th>Student</th><th>Dept</th><th>Yr/Sec</th><th>Event</th><th>Reason</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for app in apps %}
+        <tr>
+          <td><span class="app-id">{{ app.application_id }}</span></td>
+          <td><strong>{{ app.student.name }}</strong><br><small>{{ app.student.register_no }}</small></td>
+          <td><small>{{ app.student.department[:18] }}...</small></td>
+          <td>{{ app.student.year }}{{ app.student.section }}</td>
+          <td>{{ app.event_name[:25] }}</td>
+          <td><span class="badge badge-info">{{ app.reason }}</span></td>
+          <td><span class="status-badge status-{{ app.status | lower | replace(' ', '-') }}">{{ app.status }}</span></td>
+          <td>{{ app.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-inbox"></i><h4>No Applications</h4></div>
+  {% endif %}
+</div>
+{% endblock %}

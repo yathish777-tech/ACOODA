@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% set current_user_initial = current_user.tutor_name[0].upper() %}
+{% set current_user_name = current_user.tutor_name %}
+{% set current_user_role = "Tutor" %}
+
+{% block title %}Applications - Tutor ACOODA{% endblock %}
+{% block page_title %}OD Applications{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('tutor.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('tutor.applications') }}" class="nav-item active"><i class="fas fa-list-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('tutor.export_excel') }}" class="nav-item"><i class="fas fa-file-excel"></i><span>Export Excel</span></a>
+<a href="{{ url_for('auth.change_password') }}" class="nav-item"><i class="fas fa-key"></i><span>Change Password</span></a>
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('tutor.export_excel') }}" class="btn-topbar"><i class="fas fa-file-excel"></i> Export Excel</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list-alt"></i> All Applications (Year {{ current_user.year_handling }} - Section {{ current_user.section_handling }})</h3>
+    <div class="filter-group">
+      <a href="{{ url_for('tutor.applications') }}" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+      <a href="{{ url_for('tutor.applications', status='Pending') }}" class="filter-btn {% if status_filter == 'Pending' %}active{% endif %}">Pending</a>
+      <a href="{{ url_for('tutor.applications', status='Approved') }}" class="filter-btn {% if status_filter == 'Approved' %}active{% endif %}">Approved</a>
+      <a href="{{ url_for('tutor.applications', status='Rejected') }}" class="filter-btn {% if status_filter == 'Rejected' %}active{% endif %}">Rejected</a>
+    </div>
+  </div>
+  {% if apps %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>App ID</th><th>Student</th><th>Event</th><th>From</th><th>To</th><th>Submitted</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for app in apps %}
+        <tr>
+          <td><span class="app-id">{{ app.application_id }}</span></td>
+          <td><strong>{{ app.student.name }}</strong><br><small class="text-muted">{{ app.student.register_no }}</small></td>
+          <td>{{ app.event_name }}<br><span class="badge badge-info">{{ app.reason }}</span></td>
+          <td>{{ app.from_date.strftime('%d %b %Y') }}</td>
+          <td>{{ app.to_date.strftime('%d %b %Y') }}</td>
+          <td>{{ app.created_at.strftime('%d %b %Y') }}</td>
+          <td><span class="status-badge status-{{ app.status | lower | replace(' ', '-') }}">{{ app.status }}</span></td>
+          <td>
+            <div class="action-btns">
+              <a href="{{ url_for('tutor.review_application', app_id=app.id) }}" class="btn-icon btn-view" title="Review">
+                <i class="fas fa-{% if app.status == 'Pending Tutor Review' %}clipboard-check{% else %}eye{% endif %}"></i>
+              </a>
+              <a href="{{ url_for('tutor.download_pdf', app_id=app.id) }}" class="btn-icon btn-download" title="Download PDF">
+                <i class="fas fa-file-pdf"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-folder-open"></i>
+    <h4>No Applications</h4>
+    <p>{% if status_filter %}No {{ status_filter }} applications{% else %}No applications yet{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

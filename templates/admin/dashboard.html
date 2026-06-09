@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% set current_user_initial = "A" %}
+{% set current_user_name = current_user.username %}
+{% set current_user_role = "Administrator" %}
+
+{% block title %}Admin Dashboard - ACOODA{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+<a href="{{ url_for('admin.tutors') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Tutors</span></a>
+<a href="{{ url_for('admin.hods') }}" class="nav-item"><i class="fas fa-user-tie"></i><span>HODs</span></a>
+<a href="{{ url_for('admin.upload_tutors') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload Tutors</span></a>
+<a href="{{ url_for('admin.upload_hods') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload HODs</span></a>
+<a href="{{ url_for('admin.applications') }}" class="nav-item"><i class="fas fa-file-alt"></i><span>All Applications</span></a>
+<a href="{{ url_for('admin.audit_log') }}" class="nav-item"><i class="fas fa-history"></i><span>Audit Log</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-banner admin-banner">
+  <div class="welcome-text">
+    <h2>Admin Control Panel 🛡️</h2>
+    <p>ACOODA System Administration</p>
+  </div>
+</div>
+
+<div class="stats-grid stats-grid-4">
+  <div class="stat-card stat-total"><div class="stat-icon"><i class="fas fa-user-graduate"></i></div><div class="stat-info"><div class="stat-value">{{ stats.students }}</div><div class="stat-label">Students</div></div></div>
+  <div class="stat-card" style="--card-color:#7c3aed"><div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div><div class="stat-info"><div class="stat-value">{{ stats.tutors }}</div><div class="stat-label">Tutors</div></div></div>
+  <div class="stat-card" style="--card-color:#0891b2"><div class="stat-icon"><i class="fas fa-user-tie"></i></div><div class="stat-info"><div class="stat-value">{{ stats.hods }}</div><div class="stat-label">HODs</div></div></div>
+  <div class="stat-card stat-pending"><div class="stat-icon"><i class="fas fa-file-alt"></i></div><div class="stat-info"><div class="stat-value">{{ stats.applications }}</div><div class="stat-label">Applications</div></div></div>
+</div>
+
+<div class="stats-grid stats-grid-3">
+  <div class="stat-card stat-pending"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><div class="stat-value">{{ stats.pending }}</div><div class="stat-label">Pending</div></div></div>
+  <div class="stat-card stat-approved"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-info"><div class="stat-value">{{ stats.approved }}</div><div class="stat-label">Approved</div></div></div>
+  <div class="stat-card stat-rejected"><div class="stat-icon"><i class="fas fa-times-circle"></i></div><div class="stat-info"><div class="stat-value">{{ stats.rejected }}</div><div class="stat-label">Rejected</div></div></div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+  <h3 class="section-heading">Quick Actions</h3>
+  <div class="qa-grid">
+    <a href="{{ url_for('admin.upload_tutors') }}" class="qa-card">
+      <i class="fas fa-upload"></i>
+      <span>Upload Tutors</span>
+    </a>
+    <a href="{{ url_for('admin.upload_hods') }}" class="qa-card">
+      <i class="fas fa-upload"></i>
+      <span>Upload HODs</span>
+    </a>
+    <a href="{{ url_for('admin.students') }}" class="qa-card">
+      <i class="fas fa-users"></i>
+      <span>Manage Students</span>
+    </a>
+    <a href="{{ url_for('admin.applications') }}" class="qa-card">
+      <i class="fas fa-file-alt"></i>
+      <span>All Applications</span>
+    </a>
+    <a href="{{ url_for('admin.audit_log') }}" class="qa-card">
+      <i class="fas fa-history"></i>
+      <span>Audit Log</span>
+    </a>
+    <a href="{{ url_for('admin.download_tutor_template') }}" class="qa-card">
+      <i class="fas fa-download"></i>
+      <span>Tutor Template</span>
+    </a>
+  </div>
+</div>
+
+<!-- Recent Applications -->
+<div class="card mt-4">
+  <div class="card-header"><h3><i class="fas fa-history"></i> Recent Applications</h3><a href="{{ url_for('admin.applications') }}" class="btn-sm-outline">View All</a></div>
+  {% if recent_apps %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr><th>App ID</th><th>Student</th><th>Department</th><th>Event</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for app in recent_apps %}
+        <tr>
+          <td><span class="app-id">{{ app.application_id }}</span></td>
+          <td>{{ app.student.name }}<br><small>{{ app.student.register_no }}</small></td>
+          <td>{{ app.student.department[:25] }}...</td>
+          <td>{{ app.event_name[:30] }}</td>
+          <td><span class="status-badge status-{{ app.status | lower | replace(' ', '-') }}">{{ app.status }}</span></td>
+          <td>{{ app.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-inbox"></i><h4>No Applications Yet</h4></div>
+  {% endif %}
+</div>
+{% endblock %}

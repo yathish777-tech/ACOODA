@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% set current_user_initial = "A" %}
+{% set current_user_name = current_user.username %}
+{% set current_user_role = "Administrator" %}
+{% block title %}Tutors - Admin ACOODA{% endblock %}
+{% block page_title %}Tutor Management{% endblock %}
+{% block nav_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+<a href="{{ url_for('admin.students') }}" class="nav-item"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+<a href="{{ url_for('admin.tutors') }}" class="nav-item active"><i class="fas fa-chalkboard-teacher"></i><span>Tutors</span></a>
+<a href="{{ url_for('admin.hods') }}" class="nav-item"><i class="fas fa-user-tie"></i><span>HODs</span></a>
+<a href="{{ url_for('admin.upload_tutors') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload Tutors</span></a>
+<a href="{{ url_for('admin.upload_hods') }}" class="nav-item"><i class="fas fa-upload"></i><span>Upload HODs</span></a>
+<a href="{{ url_for('admin.applications') }}" class="nav-item"><i class="fas fa-file-alt"></i><span>Applications</span></a>
+<a href="{{ url_for('admin.audit_log') }}" class="nav-item"><i class="fas fa-history"></i><span>Audit Log</span></a>
+{% endblock %}
+{% block topbar_actions %}
+<button type="button" class="btn-topbar" onclick="openModal('addTutorModal')"><i class="fas fa-plus"></i> Add Tutor</button>
+<a href="{{ url_for('admin.upload_tutors') }}" class="btn-topbar"><i class="fas fa-upload"></i> Upload Tutors</a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-filter"></i> Search & Filters</h3>
+    <a href="{{ url_for('admin.tutors') }}" class="btn-sm-outline">Clear</a>
+  </div>
+  <form method="GET" action="{{ url_for('admin.tutors') }}" class="management-toolbar">
+    <div class="form-group">
+      <label>Name, Department, or Email</label>
+      <input type="search" name="q" class="form-control" value="{{ filters.q }}" placeholder="Search tutors">
+    </div>
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department" class="form-control">
+        <option value="">All Departments</option>
+        {% for department in filter_options.departments %}
+        <option value="{{ department }}" {% if filters.department == department %}selected{% endif %}>{{ department }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Year</label>
+      <select name="year" class="form-control">
+        <option value="">All Years</option>
+        {% for year in filter_options.years %}
+        <option value="{{ year }}" {% if filters.year == year|string %}selected{% endif %}>Year {{ year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Section</label>
+      <select name="section" class="form-control">
+        <option value="">All Sections</option>
+        {% for section in filter_options.sections %}
+        <option value="{{ section }}" {% if filters.section == section %}selected{% endif %}>Section {{ section }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-primary toolbar-submit"><i class="fas fa-search"></i> Search</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-chalkboard-teacher"></i> All Tutors ({{ tutors|length }})</h3>
+    <button type="button" class="btn-sm-outline" onclick="openModal('addTutorModal')"><i class="fas fa-plus"></i> Add Tutor</button>
+  </div>
+  {% if tutors %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Department</th><th>Year</th><th>Section</th><th>Status</th><th>Added</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for t in tutors %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ t.tutor_name }}</strong></td>
+          <td>{{ t.email }}</td>
+          <td>{{ t.department }}</td>
+          <td>Year {{ t.year_handling }}</td>
+          <td>Section {{ t.section_handling }}</td>
+          <td><span class="badge {% if t.is_active %}badge-success{% else %}badge-danger{% endif %}">{{ 'Active' if t.is_active else 'Inactive' }}</span></td>
+          <td>{{ t.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div class="action-btns">
+              <button type="button" class="btn-icon btn-view" title="View" onclick="openModal('viewTutor{{ t.id }}')"><i class="fas fa-eye"></i></button>
+              <button type="button" class="btn-icon btn-edit" title="Edit" onclick="openModal('editTutor{{ t.id }}')"><i class="fas fa-pen"></i></button>
+              <form method="POST" action="{{ url_for('admin.delete_tutor', tid=t.id) }}">
+                <button type="submit" class="btn-icon btn-delete" title="Delete" data-confirm="Delete {{ t.tutor_name }}? Assigned applications will keep history but become unassigned."><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-chalkboard-teacher"></i>
+    <h4>No Tutors Found</h4>
+    <p>Add a tutor or adjust your filters.</p>
+    <button type="button" class="btn-primary mt-2" onclick="openModal('addTutorModal')">Add Tutor</button>
+  </div>
+  {% endif %}
+</div>
+
+<div class="modal-backdrop" id="addTutorModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-plus"></i> Add Tutor</h3>
+      <button type="button" class="modal-close" onclick="closeModal('addTutorModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.add_tutor') }}" class="modal-body">
+      <div class="form-row-2">
+        <div class="form-group"><label>Tutor Name</label><input type="text" name="tutor_name" class="form-control" required></div>
+        <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" required></div>
+      </div>
+      <div class="form-group"><label>Department</label><input type="text" name="department" class="form-control" required></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Year Handling</label><input type="number" name="year_handling" class="form-control" min="1" max="5" required></div>
+        <div class="form-group"><label>Section Handling</label><input type="text" name="section_handling" class="form-control" placeholder="A" required></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeModal('addTutorModal')">Cancel</button>
+        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save Tutor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% for t in tutors %}
+<div class="modal-backdrop" id="viewTutor{{ t.id }}">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-chalkboard-teacher"></i> Tutor Details</h3>
+      <button type="button" class="modal-close" onclick="closeModal('viewTutor{{ t.id }}')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Name</span><span class="detail-value">{{ t.tutor_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value">{{ t.email }}</span></div>
+        <div class="detail-item"><span class="detail-label">Department</span><span class="detail-value">{{ t.department }}</span></div>
+        <div class="detail-item"><span class="detail-label">Year Handling</span><span class="detail-value">Year {{ t.year_handling }}</span></div>
+        <div class="detail-item"><span class="detail-label">Section Handling</span><span class="detail-value">Section {{ t.section_handling }}</span></div>
+        <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value">{{ 'Active' if t.is_active else 'Inactive' }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="editTutor{{ t.id }}">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-pen"></i> Edit Tutor</h3>
+      <button type="button" class="modal-close" onclick="closeModal('editTutor{{ t.id }}')"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.edit_tutor', tid=t.id) }}" class="modal-body">
+      <div class="form-row-2">
+        <div class="form-group"><label>Tutor Name</label><input type="text" name="tutor_name" class="form-control" value="{{ t.tutor_name }}" required></div>
+        <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" value="{{ t.email }}" required></div>
+      </div>
+      <div class="form-group"><label>Department</label><input type="text" name="department" class="form-control" value="{{ t.department }}" required></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Year Handling</label><input type="number" name="year_handling" class="form-control" min="1" max="5" value="{{ t.year_handling }}" required></div>
+        <div class="form-group"><label>Section Handling</label><input type="text" name="section_handling" class="form-control" value="{{ t.section_handling }}" required></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeModal('editTutor{{ t.id }}')">Cancel</button>
+        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Update Tutor</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-backdrop').forEach(modal => {
+  modal.addEventListener('click', event => {
+    if (event.target === modal) modal.classList.remove('open');
+  });
+});
+</script>
+{% endblock %}
